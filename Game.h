@@ -10,6 +10,9 @@ enum class SquareType { Wall, Dots, Pacman, Treasure, Enemies, Empty, PowerfulPa
 // TODO: implement
 std::string SquareTypeStringify(SquareType sq);
 
+// Forward declare Game class for Board to use
+class Game;
+
 class Board {
 public:
 	// TODO: implement
@@ -35,7 +38,7 @@ public:
 
   // Move an enemy to a new position on the board. Return
 	// true if they moved successfully, false otherwise.
-  	bool MoveEnemy(Player *p, Position pos);
+  	bool MoveEnemy(Player *p, Position pos, Game* game);
 	void SpawnNewEnemy(std::vector<Player*>& enemylist);
 
 	// Fix the operator<< declaration - remove the implementation
@@ -74,6 +77,8 @@ public:
 
 	// Add this method to print the board
 	const Board& GetBoard() const { return *board_; }
+	void SetHumanPlayer(Player* human);
+	Player* GetHumanPlayer() const;
 
 	friend std::ostream& operator<<(std::ostream& os, const Game &m);
 
@@ -81,6 +86,8 @@ private:
 	Board *board_;
 	std::vector<Player *> players_;
 	int turn_count_;
+	Player* human_player_;
 };  // class Game
+
 
 #endif  // _GAME_H_

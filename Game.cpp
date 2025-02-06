@@ -233,19 +233,34 @@ void Board::SpawnNewEnemy(std::vector<Player*>& enemylist) {
     }
 }
 
-bool Board::MoveEnemy(Player *p, Position pos) {
+bool Board::MoveEnemy(Player *p, Position pos, Game* game) {
+    //if enemy is on player's square, kill player
+    if (get_square_value(pos) == SquareType::Pacman) {
+        game->GetHumanPlayer()->setIsDead(true);
+        return true;
+    }
     SquareType target = get_square_value(pos);
     
     // Handle collision with player
-    if (target == SquareType::Pacman) {
-        // Regular player dies - move enemy onto player position
-        SetSquareValue(p->get_position(), SquareType::Dots);  // Leave dots behind
-        SetSquareValue(pos, SquareType::Enemies);  // Replace player with enemy
+    if (target == SquareType::Pacman || target == SquareType::PowerfulPacman) {
+        if (target == SquareType::PowerfulPacman) {
+            // Enemy dies when colliding with powered-up player
+            return false;
+        }
+        // Enemy collides with regular player
+        SetSquareValue(p->get_position(), SquareType::Dots);  // clear enemy's old square
+        SetSquareValue(pos, SquareType::Enemies);             // enemy moves onto player's square
         p->SetPosition(pos);
+        
+        // Mark the human player as dead
+        if (game && game->GetHumanPlayer()) {
+            game->GetHumanPlayer()->setIsDead(true);
+        }
+        if (get_square_value(pos) == SquareType::Pacman) {
+            game->GetHumanPlayer()->setIsDead(true);
+            return true;
+        }
         return true;
-    } else if (target == SquareType::PowerfulPacman) {
-        // Can't move onto powered-up player
-        return false;
     }
     
     // Check adjacent squares for regular player (not powered up)
@@ -295,10 +310,11 @@ std::ostream& operator<<(std::ostream& os, const Board &b) {
 }
 
 // Game implementation
-Game::Game() : board_(new Board()), turn_count_(0) {
+Game::Game() : board_(new Board()), turn_count_(0), human_player_(nullptr) {
 }
 
 void Game::NewGame(Player *human, std::vector<Player*>& enemylist, const int enemies) {
+    SetHumanPlayer(human);  // Store the human player pointer
     // Clear any existing enemies first
     for (Player* enemy : enemylist) {
         delete enemy;
@@ -411,10 +427,10 @@ void Game::TakeTurnEnemy(Player *p) {
     }
 
     // Try to move to best position
-    if (!board_->MoveEnemy(p, best_move)) {
+    if (!board_->MoveEnemy(p, best_move, this)) {
         // If best move fails, try a random valid move
         int random_index = rand() % valid_moves.size();
-        board_->MoveEnemy(p, valid_moves[random_index]);
+        board_->MoveEnemy(p, valid_moves[random_index], this);
     }
 }
 
@@ -443,4 +459,12 @@ std::string Game::GenerateReport(Player *p) {
 std::ostream& operator<<(std::ostream& os, const Game &m) {
     // TODO: Implement game state display
     return os;
+}
+
+void Game::SetHumanPlayer(Player* human) {
+    human_player_ = human;
+}
+
+Player* Game::GetHumanPlayer() const {
+    return human_player_;
 }
