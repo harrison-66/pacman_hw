@@ -410,6 +410,8 @@ void Game::TakeTurnEnemy(Player *p) {
             board_->SetSquareValue(pacman_pos, SquareType::Enemies);
             board_->SetSquareValue(enemy_pos, SquareType::Dots);
             p->SetPosition(pacman_pos);
+            // Mark the human player as dead.
+            GetHumanPlayer()->setIsDead(true);
             return;
         }
     }
