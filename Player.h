@@ -23,7 +23,10 @@ public:
 	Position get_position() const {return pos_; }  // inline member function
 	bool is_human() const {return is_human_; }  // inline member function
 	bool hasTreasure() const {return has_Treasure_; }  // inline member function
+	bool hasEnemyTreasure() const {return has_Enemy_Treasure_; }  // inline member function
 	bool isDead() const {return isDead_; }  // inline member function
+	int getLives() const {return lives_; }  // inline member function
+	void setLives(int lives) { lives_ = lives; }  // Set lives directly
 
 	// TODO: implement the following functions
 	// You MUST implement the following functions
@@ -35,11 +38,18 @@ public:
 	// checks if the player owns a treasure
 	void setHasTreasure(bool value){ has_Treasure_ = value; };
 
+	// checks if enemy has their special treasure
+	void setHasEnemyTreasure(bool value){ has_Enemy_Treasure_ = value; };
+
 	//checks if the enemy is dead
 	void setIsDead(bool isdead);
 
+	// Decrease lives by 1
+	void decreaseLives() { lives_--; }
 
-	// You may want to implement these functions as well
+	// Reset player state for respawn
+	void respawn();
+
 	// ToRelativePosition is a function we used to translate positions
 	// into direction s relative to the player (up, down, etc)
 	/**
@@ -58,7 +68,9 @@ private:
 	Position pos_;
 	bool is_human_;
 	bool has_Treasure_;
+	bool has_Enemy_Treasure_;  // Track if enemy has their special treasure
 	bool isDead_;
+	int lives_;  // Number of lives remaining
 
 	// You may add other fields as needed
 

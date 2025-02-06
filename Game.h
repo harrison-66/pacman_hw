@@ -5,7 +5,7 @@
 #include "Player.h"
 
 // you may change this enum as you need
-enum class SquareType { Wall, Dots, Pacman, Treasure, Enemies, Empty, PowerfulPacman, Trap, EnemySpecialTreasure, SpecialDots };
+enum class SquareType { Wall, Dots, Pacman, Treasure, Enemies, Empty, PowerfulPacman, Trap, HiddenTrap, EnemySpecialTreasure, SpecialDots };
 
 // TODO: implement
 std::string SquareTypeStringify(SquareType sq);
@@ -16,7 +16,7 @@ class Game;
 class Board {
 public:
 	// TODO: implement
-	Board(); // constructor
+	Board(int num_enemies = 2); // constructor with default value of 2 enemies
 
 	// already implemented in line
 	int get_rows() const {return 10; }  // you should be able to change the size of your
@@ -46,6 +46,7 @@ public:
 
 private:
 	SquareType arr_[10][10];
+	bool collected_[10][10];  // Track which spaces have been collected
 	int rows_; // might be convenient but not necessary
 	int cols_;
 	// you may add more fields, as needed
@@ -77,8 +78,12 @@ public:
 
 	// Add this method to print the board
 	const Board& GetBoard() const { return *board_; }
+	Board& GetBoard() { return *board_; }  // Non-const version for modifications
 	void SetHumanPlayer(Player* human);
 	Player* GetHumanPlayer() const;
+
+	// Helper method to handle respawning
+	bool RespawnPlayer(Player* player);
 
 	friend std::ostream& operator<<(std::ostream& os, const Game &m);
 
