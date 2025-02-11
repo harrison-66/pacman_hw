@@ -6,9 +6,13 @@
 
 /*
 Harrison Getches | Intensive Programming Workshop | 02/06/2025
+compile with: make (make clean first if needed)
+run as: /pacman (number of enemies, optional, default is 2)
+
+
 Additional Features added:
-- Traps: Visible and Hidden traps that kill the player if touched
-- Enemy Routing: Enemies move towards player if possible
+- Traps: Visible and Hidden traps that kill the player if touched (visible traps -> 3 lives, hidden traps -> 1 life)
+- Enemy Routing: Enemies move towards player when possible (and enemy not powered)
 - Custom Enemy Count: User can input the number of enemies in terminal or CL Argument
 - Enemy Treasure: Enemies can pick up special treasure that gives them a power boost (overrules 20% of normal treasure spawn)
 */

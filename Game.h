@@ -3,6 +3,7 @@
 
 #include <vector>
 #include "Player.h"
+#include <climits>
 
 // you may change this enum as you need
 enum class SquareType { Wall, Dots, Pacman, Treasure, Enemies, Empty, PowerfulPacman, Trap, HiddenTrap, EnemySpecialTreasure, SpecialDots };
@@ -40,6 +41,11 @@ public:
 	// true if they moved successfully, false otherwise.
   	bool MoveEnemy(Player *p, Position pos, Game* game);
 	void SpawnNewEnemy(std::vector<Player*>& enemylist);
+
+	// New pathfinding functions
+	Position FindPath(Position start, Position target);
+	int ManhattanDistance(Position a, Position b);
+	Position GetBestAdjacentMove(Position start, Position target);
 
 	// Fix the operator<< declaration - remove the implementation
 	friend std::ostream& operator<<(std::ostream& os, const Board &b);

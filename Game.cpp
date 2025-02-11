@@ -1,9 +1,19 @@
+/**
+ * Game.cpp
+ * Implementation of the Game and Board classes for a Pacman-style game.
+ * Includes board initialization, player movement, enemy AI, and game state management.
+ */
+
 #include "Game.h"
 #include <iostream>
 #include <cstdlib>
 
-
-// Convert SquareType to string representation
+/**
+ * Converts a SquareType enum to its string (emoji) representation.
+ * 
+ * @param sq The SquareType to convert
+ * @return String (emoji) representation of the square type
+ */
 std::string SquareTypeStringify(SquareType sq) {
     switch (sq) {
         case SquareType::Wall: return "🟩";      // green cross
@@ -21,7 +31,12 @@ std::string SquareTypeStringify(SquareType sq) {
     }
 }
 
-// Board initialization: sets up the board with pellets, walls, and enemies as per specifications
+/**
+ * Initializes a new board with the specified number of enemies.
+ * Sets up walls, dots, traps, treasures, and enemies in their starting positions.
+ * 
+ * @param num_enemies Number of enemies to place on the board (default: 2)
+ */
 Board::Board(int num_enemies) {
     rows_ = get_rows();
     cols_ = get_cols();
@@ -135,18 +150,36 @@ Board::Board(int num_enemies) {
     }
 }
 
+/**
+ * Gets the value of a square at the specified position.
+ * 
+ * @param pos Position to check
+ * @return SquareType value at the position
+ */
 SquareType Board::get_square_value(Position pos) const {
     return arr_[pos.row][pos.col];
 }
 
+/**
+ * Sets the value of a square at the specified position.
+ * 
+ * @param pos Position to set
+ * @param value New SquareType value
+ */
 void Board::SetSquareValue(Position pos, SquareType value) {
     arr_[pos.row][pos.col] = value;
 }
 
-// Get all possible moves for a player
+/**
+ * Gets all possible moves for a player from their current position.
+ * Checks all four directions and excludes walls.
+ * 
+ * @param p Pointer to the player
+ * @return Vector of valid positions the player can move to
+ */
 std::vector<Position> Board::GetMoves(Player *p) {
     std::vector<Position> moves;
-    //check all 4 directions
+    // Check all 4 directions
     if (arr_[p->get_position().row-1][p->get_position().col] != SquareType::Wall) {
         moves.push_back(Position{p->get_position().row-1, p->get_position().col});
     }
@@ -162,6 +195,15 @@ std::vector<Position> Board::GetMoves(Player *p) {
     return moves;
 }
 
+/**
+ * Moves a player to a new position on the board.
+ * Handles interactions with enemies, treasures, traps, and other game elements.
+ * 
+ * @param p The player to move
+ * @param pos The target position
+ * @param enemylist List of enemies in the game
+ * @return true if move was successful, false otherwise
+ */
 bool Board::MovePlayer(Player *p, Position pos, std::vector<Player*>& enemylist) {
     // Check if move is valid
     std::vector<Position> valid_moves = GetMoves(p);
@@ -229,7 +271,6 @@ bool Board::MovePlayer(Player *p, Position pos, std::vector<Player*>& enemylist)
         }
 
         if (p->hasTreasure()) {
-            // Original treasure logic
             p->setHasTreasure(false);  // Lose power-up
             
             // Find and remove the enemy
@@ -258,7 +299,7 @@ bool Board::MovePlayer(Player *p, Position pos, std::vector<Player*>& enemylist)
     // Handle treasure pickup
     if (target == SquareType::Treasure) {
         p->ChangePoints(100);
-        p->setHasTreasure(true);  // Explicitly set to true
+        p->setHasTreasure(true); 
         SetSquareValue(p->get_position(), SquareType::Empty);
         SetSquareValue(pos, SquareType::PowerfulPacman);
         p->SetPosition(pos);
@@ -292,13 +333,19 @@ bool Board::MovePlayer(Player *p, Position pos, std::vector<Player*>& enemylist)
     return false;
 }
 
-// Add this helper function to Board class
+/**
+ * Spawns a new enemy at a random valid position on the board.
+ * Valid positions are empty spaces or dots.
+ * 
+ * @param enemylist Vector of enemy pointers to add the new enemy to
+ */
 void Board::SpawnNewEnemy(std::vector<Player*>& enemylist) {
     int attempts = 0;
     int rand_row, rand_col;
     bool found_position = false;
     
-    while (!found_position && attempts < 100) {  // Add maximum attempts to prevent infinite loop
+    // Try random positions first
+    while (!found_position && attempts < 100) {
         rand_row = rand() % rows_;
         rand_col = rand() % cols_;
         
@@ -309,8 +356,8 @@ void Board::SpawnNewEnemy(std::vector<Player*>& enemylist) {
         attempts++;
     }
     
+    // If no random position found, scan systematically
     if (!found_position) {
-        // If no position found after max attempts, scan board systematically
         for (int i = 0; i < rows_ && !found_position; i++) {
             for (int j = 0; j < cols_; j++) {
                 if (arr_[i][j] == SquareType::Empty || 
@@ -332,6 +379,14 @@ void Board::SpawnNewEnemy(std::vector<Player*>& enemylist) {
     }
 }
 
+/**
+ * Moves an enemy to a new position, handling interactions with players and treasures.
+ * 
+ * @param p Pointer to the enemy to move
+ * @param pos Target position to move to
+ * @param game Pointer to the current game instance
+ * @return true if move was successful, false otherwise
+ */
 bool Board::MoveEnemy(Player *p, Position pos, Game* game) {
     SquareType target = get_square_value(pos);
     
@@ -367,7 +422,12 @@ bool Board::MoveEnemy(Player *p, Position pos, Game* game) {
         // Enemy collides with regular player
         if (p->hasEnemyTreasure() || target == SquareType::Pacman) {
             Position old_pos = p->get_position();
-            SetSquareValue(old_pos, collected_[old_pos.row][old_pos.col] ? SquareType::Empty : SquareType::Dots);
+            // Restore the special dot if we were on one
+            if (arr_[old_pos.row][old_pos.col] == SquareType::Enemies && !collected_[old_pos.row][old_pos.col]) {
+                SetSquareValue(old_pos, SquareType::SpecialDots);
+            } else {
+                SetSquareValue(old_pos, collected_[old_pos.row][old_pos.col] ? SquareType::Empty : SquareType::Dots);
+            }
             SetSquareValue(pos, SquareType::Enemies);
             p->SetPosition(pos);
             
@@ -378,45 +438,43 @@ bool Board::MoveEnemy(Player *p, Position pos, Game* game) {
         }
     }
     
-    // Check adjacent squares for regular player (not powered up)
-    std::vector<Position> adjacent = {
-        Position{pos.row-1, pos.col},
-        Position{pos.row+1, pos.col},
-        Position{pos.row, pos.col-1},
-        Position{pos.row, pos.col+1}
-    };
-    
-    // First check if we can move onto player
-    for (const Position& adj : adjacent) {
-        if (adj.row >= 0 && adj.row < get_rows() && adj.col >= 0 && adj.col < get_cols()) {
-            if (get_square_value(adj) == SquareType::Pacman) {
-                // Move onto player if possible
-                if (target == SquareType::Empty || target == SquareType::Dots) {
-                    Position old_pos = p->get_position();
-                    SetSquareValue(old_pos, collected_[old_pos.row][old_pos.col] ? SquareType::Empty : SquareType::Dots);
-                    SetSquareValue(pos, SquareType::Enemies);
-                    p->SetPosition(pos);
-                    return true;  // Player will be killed in Game::TakeTurnEnemy
-                }
-            }
+    // Only move if target square is empty, has dots, or has special dots
+    if (target == SquareType::Empty || target == SquareType::Dots || target == SquareType::SpecialDots) {
+        Position old_pos = p->get_position();
+        
+        // Remember if we're moving onto a special dot
+        bool was_special_dot = (target == SquareType::SpecialDots);
+        
+        // Restore the special dot if we were on one
+        if (arr_[old_pos.row][old_pos.col] == SquareType::Enemies && !collected_[old_pos.row][old_pos.col]) {
+            SetSquareValue(old_pos, SquareType::SpecialDots);
+        } else {
+            SetSquareValue(old_pos, collected_[old_pos.row][old_pos.col] ? SquareType::Empty : SquareType::Dots);
         }
+        
+        // Move enemy to new position
+        SetSquareValue(pos, SquareType::Enemies);
+        p->SetPosition(pos);
+        
+        // If we moved onto a special dot, don't mark it as collected
+        if (!was_special_dot) {
+            collected_[pos.row][pos.col] = true;
+        }
+        
+        return true;
     }
     
-    // Only move if target square is empty or has dots
-    if (target != SquareType::Empty && target != SquareType::Dots) {
-        return false;
-    }
-    
-    // Move enemy
-    Position old_pos = p->get_position();
-    // Leave either Empty or Dots based on whether the space was collected
-    SetSquareValue(old_pos, collected_[old_pos.row][old_pos.col] ? SquareType::Empty : SquareType::Dots);
-    SetSquareValue(pos, SquareType::Enemies);
-    p->SetPosition(pos);
-    
-    return true;
+    return false;
 }
 
+/**
+ * Overloaded output operator for Board class.
+ * Prints the current state of the board using emoji representations.
+ * 
+ * @param os Output stream
+ * @param b Board to print
+ * @return Modified output stream
+ */
 std::ostream& operator<<(std::ostream& os, const Board &b) {
     for (int i = 0; i < b.rows_; i++) {
         for (int j = 0; j < b.cols_; j++) {
@@ -427,28 +485,40 @@ std::ostream& operator<<(std::ostream& os, const Board &b) {
     return os;
 }
 
-// Game implementation
+/**
+ * Game constructor. Initializes a new game with default values.
+ */
 Game::Game() : board_(new Board()), turn_count_(0), human_player_(nullptr) {
 }
 
+/**
+ * Starts a new game with specified players and number of enemies.
+ * Initializes the board and places all entities in their starting positions.
+ * 
+ * @param human Pointer to the human player
+ * @param enemylist Vector of enemy pointers
+ * @param enemies Number of enemies to create
+ */
 void Game::NewGame(Player *human, std::vector<Player*>& enemylist, const int enemies) {
-    // Delete old board if it exists and create new one with specified number of enemies
+    // Delete old board if it exists and create new one
     if (board_) {
         delete board_;
     }
     board_ = new Board(enemies);
     
-    SetHumanPlayer(human);  // Store the human player pointer
-    // Clear any existing enemies first
+    SetHumanPlayer(human);
+    
+    // Clear existing enemies
     for (Player* enemy : enemylist) {
         delete enemy;
     }
     enemylist.clear();
     
+    // Set player starting position
     Position pac_pos = {5,5};
     human->SetPosition(pac_pos);
     
-    // Find and create enemies
+    // Create new enemies at their positions
     for (int i = 0; i < board_->get_rows(); i++) {
         for (int j = 0; j < board_->get_cols(); j++) {
             if (board_->get_square_value(Position{i,j}) == SquareType::Enemies) {
@@ -459,6 +529,12 @@ void Game::NewGame(Player *human, std::vector<Player*>& enemylist, const int ene
     }
 }
 
+/**
+ * Takes a turn for a player, handling their movement and interactions.
+ * 
+ * @param p Pointer to the player taking the turn
+ * @param enemylist Vector of enemy pointers
+ */
 void Game::TakeTurn(Player *p, std::vector<Player*>& enemylist) {
     if (p->isDead()) {
         return;  // Don't allow moves if player is dead
@@ -597,6 +673,13 @@ Player* Game::GetHumanPlayer() const {
     return human_player_;
 }
 
+/**
+ * Respawns a player at the default spawn position.
+ * Handles enemy displacement if necessary.
+ * 
+ * @param player Pointer to the player to respawn
+ * @return true if respawn was successful, false otherwise
+ */
 bool Game::RespawnPlayer(Player* player) {
     Position spawn_pos{5, 5};
     
@@ -637,10 +720,9 @@ bool Game::RespawnPlayer(Player* player) {
         }
     }
     
-    // Now spawn the player
+    // Spawn the player and update the board
     player->SetPosition(spawn_pos);
     board_->SetSquareValue(spawn_pos, SquareType::Pacman);
-    // and print board for user 
     std::cout << *board_ << std::endl;
     return true;
 }

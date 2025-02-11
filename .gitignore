@@ -1,2 +1,4 @@
 *.o
 pacman
+.DS_Store
+.txt

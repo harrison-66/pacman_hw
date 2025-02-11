@@ -20,14 +20,14 @@ void Player::SetPosition(Position pos) {
     pos_ = pos;
 }
 
-
+// Set player to dead
 void Player::setIsDead(bool isdead) {
     isDead_ = isdead;
     if (isdead && is_human_) {
         decreaseLives();
     }
 }
-
+// Respawn player at 5,5
 void Player::respawn() {
     if (lives_ > 0) {
         isDead_ = false;
@@ -37,6 +37,7 @@ void Player::respawn() {
     }
 }
 
+// Calculate relative position of player
 std::string Player::ToRelativePosition(Position other) {
     // Calculate relative position
     if (other.row < pos_.row) return "up (w)";
@@ -46,6 +47,6 @@ std::string Player::ToRelativePosition(Position other) {
     return "same";
 }
 
-std::string Player::Stringify() {
+std::string Player::Stringify() { // print player info
     return name_ + " (Points: " + std::to_string(points_) + ")";
 }
